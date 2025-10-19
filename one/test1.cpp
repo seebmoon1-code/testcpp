@@ -5,7 +5,7 @@
 #include <sstream>
 #include <limits>
 #include <algorithm>
-#include <stdexcept> // برای مدیریت خطاها مثل stoul
+#include <stdexcept>
 
 // تعریف ساختار داده
 using Record = std::vector<std::string>;
@@ -26,12 +26,10 @@ private:
     std::string get_user_input(const std::string& prompt) {
         std::string input;
         std::cout << prompt;
-        // پاک کردن بافر ورودی (فقط در صورتی که با std::cin >> choice پاک نشده باشد)
-        if (std::cin.peek() == '\n') {
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        } else {
-            // در غیر این صورت، ورودی‌های قبلی باید توسط getline مدیریت شوند
-        }
+        
+        // در اینجا از std::cin.ignore استفاده نمی‌کنیم چون با getline مشکل ایجاد می‌کند.
+        // تمیزکاری بافر در تابع main توسط std::cin >> choice انجام شده است.
+
         std::getline(std::cin, input);
         
         // حذف فضای خالی از ابتدا و انتها
@@ -159,7 +157,7 @@ private:
             }
             
             std::string prompt = "نام ستون " + std::to_string(i + 1) + " (" + fieldDefaultName + ") چی باشه؟ (اینتر برای رد شدن) ";
-            // استفاده از std::cin.ignore() در get_user_input برای تمیز کردن بافر
+            // استفاده از تابع کمکی برای دریافت ورودی تمیز
             std::string input = get_user_input(prompt);
             
             if (input.empty()) {
@@ -182,7 +180,7 @@ private:
     }
 
 public:
-    // سازنده: dbc_c_moon
+    // سازنده
     dbc_c_Database(const std::string& name) : dbName(name) {
         cfgFileName = "dbc_c_" + name + ".cfg";
         dataFileName = "dbc_c_" + name + ".dat";
@@ -196,7 +194,7 @@ public:
         }
     }
     
-    // متد کلیدی: moon_c_4
+    // متد کلیدی پیکربندی ستون
     void configureColumns(size_t N) {
         if (N == 0) {
              std::cerr << "تعداد ستون‌ها باید حداقل 1 باشد.\n";
@@ -210,16 +208,15 @@ public:
         setFieldNamesInteractively(N);
     }
     
-    // *** متد Getter اصلاحی برای حل ارورهای Private: ***
+    // متد Getter برای دسترسی به نام دیتابیس (حل ارور Private)
     std::string getDBName() const {
         return dbName;
     }
-    // **********************************************
 
     // متد ورود داده جدید
     void enterNewRecord() {
         if (numFields == 0) {
-             std::cerr << "خطا: ابتدا باید تعداد ستون‌ها را تعریف کنید (مانند: moon_c_4).\n";
+             std::cerr << "خطا: ابتدا باید تعداد ستون‌ها را تعریف کنید (مانند: " << dbName << "_c_4).\n";
              return;
         }
 
@@ -229,13 +226,8 @@ public:
         for (size_t i = 0; i < numFields; ++i) {
             std::string prompt = "ورودی برای [" + fieldNames[i] + "]: ";
             
-            // اصلاح: استفاده از std::cin.ignore فقط زمانی که با std::cin>>choice استفاده شده است
-            std::string input;
-            std::cout << prompt;
-            std::getline(std::cin, input);
-            
-            input.erase(0, input.find_first_not_of(" \t\n\r\f\v"));
-            input.erase(input.find_last_not_of(" \t\n\r\f\v") + 1);
+            // دریافت ورودی از کاربر
+            std::string input = get_user_input(prompt);
 
             if (!input.empty()) {
                 newRecord[i] = input;
@@ -292,29 +284,40 @@ public:
 
 // --- حلقه اصلی برنامه (Main Loop) ---
 
-int main() {
-    // ایجاد دیتابیس با نام 'moon'
-    dbc_c_Database myDB("moon"); 
+// تابع main برای دریافت نام دیتابیس از ترمینال تغییر داده شد.
+int main(int argc, char* argv[]) {
+    
+    // بررسی می‌کند که آیا کاربر نام دیتابیس را وارد کرده است یا خیر
+    if (argc < 2) {
+        std::cerr << "خطا: لطفا هنگام اجرای برنامه، نام دیتابیس را وارد کنید.\n";
+        std::cerr << "مثال: ./nnn moon\n";
+        return 1;
+    }
+
+    // نام دیتابیس را از آرگومان دوم (argv[1]) می‌خواند
+    std::string db_name = argv[1]; 
+    
+    // دیتابیس را با نامی که از ترمینال گرفته شده است، می‌سازد
+    dbc_c_Database myDB(db_name); 
     
     std::string choice;
     bool running = true;
 
     while (running) {
         std::cout << "\n============================================\n";
-        std::cout << "دیتابیس MOON - عملیات:\n";
-        std::cout << "1. پیکربندی ستون‌ها (مثال: moon_c_4)\n"; 
+        std::cout << "دیتابیس " << db_name << " - عملیات:\n";
+        std::cout << "1. پیکربندی ستون‌ها (مثال: " << db_name << "_c_4)\n"; 
         std::cout << "2. وارد کردن رکورد جدید\n";
         std::cout << "3. نمایش کل دیتابیس\n";
         std::cout << "4. خروج\n";
         std::cout << "گزینه خود را وارد کنید (1-4) یا دستور [DB_NAME_c_N]: ";
         
         std::cin >> choice; 
-        
-        // توجه: std::cin.ignore در اینجا حذف شد و منطق تمیزکاری به تابع get_user_input منتقل شد
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         
         if (choice == "1") {
-            // شبیه سازی دستور moon_c_N
-            std::string countStr = myDB.getDBName() + "_c_"; // اصلاح ارور Private
+            // خط ۲۸۸ اصلاح شده برای استفاده از getDBName()
+            std::string countStr = myDB.getDBName() + "_c_"; 
             
             std::cout << "لطفا تعداد ستون‌ها را وارد کنید (فقط عدد N): ";
             std::string N_input;
@@ -334,7 +337,7 @@ int main() {
             myDB.finalSave();
             running = false;
         } else {
-            // بررسی دستور moon_c_N (خطوط ۳۰۷ و ۳۰۹ اصلاح شده)
+            // بررسی دستور DB_NAME_c_N (خطوط ۳۰۷ و ۳۰۹ اصلاح شده)
             if (choice.size() > myDB.getDBName().size() + 3 && 
                 choice.substr(0, myDB.getDBName().size() + 3) == myDB.getDBName() + "_c_") 
             {
