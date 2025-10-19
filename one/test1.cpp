@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -6,6 +5,7 @@
 #include <sstream>
 #include <limits>
 #include <algorithm>
+#include <stdexcept> // برای مدیریت خطاها مثل stoul
 
 // تعریف ساختار داده
 using Record = std::vector<std::string>;
@@ -22,18 +22,29 @@ private:
 
     // --- توابع کمکی ---
 
+    // دریافت ورودی از کاربر (تضمین ورودی تمیز)
     std::string get_user_input(const std::string& prompt) {
-        // (همان تابع قبلی برای ورودی تمیز کاربر)
         std::string input;
         std::cout << prompt;
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        // پاک کردن بافر ورودی (فقط در صورتی که با std::cin >> choice پاک نشده باشد)
+        if (std::cin.peek() == '\n') {
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        } else {
+            // در غیر این صورت، ورودی‌های قبلی باید توسط getline مدیریت شوند
+        }
         std::getline(std::cin, input);
         
+        // حذف فضای خالی از ابتدا و انتها
         input.erase(0, input.find_first_not_of(" \t\n\r\f\v"));
         input.erase(input.find_last_not_of(" \t\n\r\f\v") + 1);
+        
+        // نکته مهم: اگر ورودی شامل کاما باشد، برای جلوگیری از مشکلات CSV، آن را حذف یا جایگزین می‌کنیم
+        std::replace(input.begin(), input.end(), ',', ' '); 
+        
         return input;
     }
 
+    // جدا کردن یک خط CSV به فیلدهای وکتور
     Record parseLine(const std::string& line) const {
         Record record;
         std::stringstream ss(line);
@@ -51,23 +62,24 @@ private:
         if (!infile.is_open()) return;
 
         std::string line;
+        
         // سطر اول: تعداد فیلدها
         if (std::getline(infile, line)) {
             try {
                 numFields = std::stoul(line);
             } catch (...) {
-                numFields = 0; // خطا در خواندن
+                numFields = 0; 
             }
         }
+        
         // سطر دوم: نام فیلدها (CSV-Format)
         if (std::getline(infile, line)) {
             fieldNames = parseLine(line);
-            // اطمینان از همخوانی تعداد فیلدها با نام‌ها
             if (fieldNames.size() != numFields) {
-                std::cerr << "Warning: Field name count mismatch in config." << std::endl;
+                // اگر تعداد ستون‌های ذخیره شده با تعداد نام‌ها نخواند، اصلاح می‌کند
                 fieldNames.resize(numFields);
                 for(size_t i=0; i<numFields; ++i) {
-                     fieldNames[i] = "Col" + std::to_string(i + 1); // پیش‌فرض
+                     if (fieldNames[i].empty()) fieldNames[i] = "Col" + std::to_string(i + 1);
                 }
             }
         }
@@ -77,7 +89,7 @@ private:
     void saveConfig() const {
         std::ofstream outfile(cfgFileName);
         if (!outfile.is_open()) {
-            std::cerr << "Error: Could not open config file for saving." << std::endl;
+            std::cerr << "Error: Could not open config file for saving.\n";
             return;
         }
 
@@ -95,7 +107,7 @@ private:
     // --- مدیریت فایل داده (Data) ---
 
     void loadData() {
-        if (numFields == 0) return; // نمی‌تواند بدون پیکربندی بارگذاری کند
+        if (numFields == 0) return; 
 
         std::ifstream infile(dataFileName);
         if (!infile.is_open()) return;
@@ -104,7 +116,6 @@ private:
         std::string line;
         while (std::getline(infile, line)) {
             Record newRecord = parseLine(line);
-            // اطمینان از حفظ اندازه صحیح رکوردها
             newRecord.resize(numFields, ""); 
             data.push_back(newRecord);
         }
@@ -116,11 +127,11 @@ private:
 
         std::ofstream outfile(dataFileName);
         if (!outfile.is_open()) {
-            std::cerr << "Error: Could not open data file for saving." << std::endl;
+            std::cerr << "Error: Could not open data file for saving.\n";
             return;
         }
 
-        // ذخیره داده‌های واقعی (بدون هدر، چون هدر در فایل تنظیمات است)
+        // ذخیره داده‌ها
         for (const auto& record : data) {
             for (size_t i = 0; i < numFields; ++i) {
                 outfile << record[i] << (i < numFields - 1 ? "," : "");
@@ -128,7 +139,7 @@ private:
             outfile << "\n";
         }
         outfile.close();
-        std::cout << "Data saved successfully to " << dataFileName << std::endl;
+        std::cout << "\nداده‌ها با موفقیت ذخیره شدند.\n";
     }
 
     // --- تعامل برای تنظیم نام فیلدها ---
@@ -148,6 +159,7 @@ private:
             }
             
             std::string prompt = "نام ستون " + std::to_string(i + 1) + " (" + fieldDefaultName + ") چی باشه؟ (اینتر برای رد شدن) ";
+            // استفاده از std::cin.ignore() در get_user_input برای تمیز کردن بافر
             std::string input = get_user_input(prompt);
             
             if (input.empty()) {
@@ -165,6 +177,7 @@ private:
             }
         }
         saveConfig(); 
+        data.clear(); // اگر پیکربندی تغییر کند، داده‌های قبلی باید پاک شوند.
         std::cout << "--- تنظیمات ستون‌ها با موفقیت ذخیره شد. ---\n";
     }
 
@@ -174,36 +187,39 @@ public:
         cfgFileName = "dbc_c_" + name + ".cfg";
         dataFileName = "dbc_c_" + name + ".dat";
         
-        loadConfig(); // ابتدا سعی می‌کند پیکربندی را بارگذاری کند
+        loadConfig(); 
         if (numFields > 0) {
-            loadData(); // اگر پیکربندی بود، داده‌ها را هم بارگذاری می‌کند
-            std::cout << "دیتابیس '" << name << "' با " << numFields << " ستون بارگذاری شد.\n";
+            loadData(); 
+            std::cout << "دیتابیس '" << name << "' با " << numFields << " ستون و " << data.size() << " رکورد بارگذاری شد.\n";
         } else {
-            std::cout << "دیتابیس '" << name << "' ایجاد شد. لطفا تعداد ستون‌ها را تعریف کنید (مانند: moon_c_4).\n";
+            std::cout << "دیتابیس '" << name << "' ایجاد شد. منتظر پیکربندی ستون‌ها هستید.\n";
         }
     }
     
-    // متد کلیدی جدید: moon_c_4
+    // متد کلیدی: moon_c_4
     void configureColumns(size_t N) {
         if (N == 0) {
-             std::cerr << "تعداد ستون‌ها باید حداقل 1 باشد." << std::endl;
+             std::cerr << "تعداد ستون‌ها باید حداقل 1 باشد.\n";
              return;
         }
         
         if (numFields > 0) {
-             std::cout << "هشدار: دیتابیس قبلا پیکربندی شده است. تغییر پیکربندی، داده‌های موجود را پاک می‌کند." << std::endl;
-             // در یک پروژه واقعی، اینجا باید تاییدیه گرفته شود.
-             data.clear();
+             std::cout << "هشدار: تغییر پیکربندی، داده‌های موجود را پاک می‌کند.\n";
         }
         
         setFieldNamesInteractively(N);
-        std::cout << "پیکربندی دیتابیس با " << N << " ستون نهایی شد.\n";
     }
+    
+    // *** متد Getter اصلاحی برای حل ارورهای Private: ***
+    std::string getDBName() const {
+        return dbName;
+    }
+    // **********************************************
 
     // متد ورود داده جدید
     void enterNewRecord() {
         if (numFields == 0) {
-             std::cerr << "خطا: ابتدا باید تعداد ستون‌ها را تعریف کنید (مانند: moon_c_4)." << std::endl;
+             std::cerr << "خطا: ابتدا باید تعداد ستون‌ها را تعریف کنید (مانند: moon_c_4).\n";
              return;
         }
 
@@ -212,17 +228,24 @@ public:
         
         for (size_t i = 0; i < numFields; ++i) {
             std::string prompt = "ورودی برای [" + fieldNames[i] + "]: ";
-            std::string input = get_user_input(prompt);
+            
+            // اصلاح: استفاده از std::cin.ignore فقط زمانی که با std::cin>>choice استفاده شده است
+            std::string input;
+            std::cout << prompt;
+            std::getline(std::cin, input);
+            
+            input.erase(0, input.find_first_not_of(" \t\n\r\f\v"));
+            input.erase(input.find_last_not_of(" \t\n\r\f\v") + 1);
 
             if (!input.empty()) {
                 newRecord[i] = input;
             }
             
-            // اگر آخرین فیلد را پر کرد و اینتر زد، رکورد تکمیل شده و ذخیره می‌شود
+            // شرط شما: اگر آخرین فیلد را پر کرد و اینتر زد، رکورد تکمیل شده و ذخیره می‌شود
             if (i == numFields - 1) { 
                 data.push_back(newRecord); 
                 saveData(); 
-                std::cout << "\nرکورد " << data.size() << " تکمیل و ذخیره شد. \n";
+                std::cout << "رکورد " << data.size() << " تکمیل و ذخیره شد. \n";
             }
         }
     }
@@ -230,7 +253,7 @@ public:
     // متد نمایش
     void displayDatabase() const {
         if (numFields == 0) {
-             std::cerr << "خطا: دیتابیس هنوز پیکربندی نشده است." << std::endl;
+             std::cerr << "خطا: دیتابیس هنوز پیکربندی نشده است.\n";
              return;
         }
         std::cout << "\n--- نمایش دیتابیس (" << dbName << ") با " << numFields << " ستون ---\n";
@@ -259,18 +282,23 @@ public:
         }
         std::cout << "--------------------------------\n";
     }
+    
+    // متد نهایی برای ذخیره در هنگام خروج
+    void finalSave() const {
+        saveData();
+        saveConfig();
+    }
 };
 
-// --- حلقه اصلی برنامه ---
+// --- حلقه اصلی برنامه (Main Loop) ---
 
 int main() {
-    // 1. ایجاد دیتابیس با نام 'moon'
+    // ایجاد دیتابیس با نام 'moon'
     dbc_c_Database myDB("moon"); 
     
     std::string choice;
     bool running = true;
 
-    // **حلقه اصلی برنامه (Main Loop)**
     while (running) {
         std::cout << "\n============================================\n";
         std::cout << "دیتابیس MOON - عملیات:\n";
@@ -281,11 +309,13 @@ int main() {
         std::cout << "گزینه خود را وارد کنید (1-4) یا دستور [DB_NAME_c_N]: ";
         
         std::cin >> choice; 
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // پاکسازی بافر
+        
+        // توجه: std::cin.ignore در اینجا حذف شد و منطق تمیزکاری به تابع get_user_input منتقل شد
         
         if (choice == "1") {
             // شبیه سازی دستور moon_c_N
-            std::string countStr = myDB.dbName + "_c_";
+            std::string countStr = myDB.getDBName() + "_c_"; // اصلاح ارور Private
+            
             std::cout << "لطفا تعداد ستون‌ها را وارد کنید (فقط عدد N): ";
             std::string N_input;
             std::getline(std::cin, N_input);
@@ -301,16 +331,20 @@ int main() {
         } else if (choice == "3") {
             myDB.displayDatabase();
         } else if (choice == "4") {
+            myDB.finalSave();
             running = false;
         } else {
-            // اگر کاربر مستقیماً دستور moon_c_N را وارد کند
-            if (choice.size() > myDB.dbName.size() + 3 && choice.substr(0, myDB.dbName.size() + 3) == myDB.dbName + "_c_") {
-                 try {
-                    size_t N = std::stoul(choice.substr(myDB.dbName.size() + 3));
+            // بررسی دستور moon_c_N (خطوط ۳۰۷ و ۳۰۹ اصلاح شده)
+            if (choice.size() > myDB.getDBName().size() + 3 && 
+                choice.substr(0, myDB.getDBName().size() + 3) == myDB.getDBName() + "_c_") 
+            {
+                try {
+                    // استخراج N از دستور (خط ۳۰۹ اصلاح شده)
+                    size_t N = std::stoul(choice.substr(myDB.getDBName().size() + 3));
                     myDB.configureColumns(N);
-                 } catch (...) {
-                    std::cerr << "خطا: فرمت دستور نامعتبر است. از moon_c_N استفاده کنید (N عدد باشد).\n";
-                 }
+                } catch (...) {
+                    std::cerr << "خطا: فرمت دستور نامعتبر است. از DB_NAME_c_N استفاده کنید (N عدد باشد).\n";
+                }
             } else {
                 std::cout << "گزینه یا دستور نامعتبر. دوباره تلاش کنید.\n";
             }
