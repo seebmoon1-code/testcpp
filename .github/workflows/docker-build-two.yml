@@ -1,9 +1,7 @@
-
 name: Build & Push 'Two' Docker Image
 
 on:
   push:
-    # فقط وقتی تغییری در مسیر two اتفاق افتاد، اجرا شو
     paths:
       - 'two/**'
     branches: [ "main" ]
@@ -13,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write # مجوز پوش به GHCR
+      packages: write 
       
     steps:
       - name: Checkout repository
@@ -30,7 +28,6 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          # نام ایمیج در رجیستری: testcpp/two
           images: ghcr.io/${{ github.repository }}/two 
           tags: |
             type=sha,format=long
@@ -38,7 +35,6 @@ jobs:
       - name: Build and push Docker image for 'two'
         uses: docker/build-push-action@v5
         with:
-          # این دو خط، گیت‌هاب را مجبور می‌کند فقط با فایل‌های داخل پوشه two کار کند
           context: ./two 
           file: ./two/Dockerfile
           push: true
