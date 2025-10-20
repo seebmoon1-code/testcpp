@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ Cpp Server V2.0 - پایدار و چندنخی</title>
+    <link rel="stylesheet" href="/style.css"> 
+    <style>
+        /* استایل‌های داخلی برای بخش‌های جدید (برای جلوگیری از طولانی شدن style.css) */
+        .technical-details table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .technical-details th, .technical-details td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: right;
+        }
+        .technical-details th {
+            background-color: #f0f0f0;
+            width: 30%;
+        }
+        .guide ol {
+            padding-right: 20px;
+        }
+        .ai-credit {
+            background-color: #e8f5e9;
+            border-right: 5px solid #28a745;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: right;
+            font-size: 0.9em;
+        }
+        .ai-credit a {
+            color: #28a745;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>⚡ وب سرور C++ پیشرفته (با SQLite و Multi-Thread)</h1>
+        <p>پروژه‌ای که پایداری، سرعت و امنیت را در یکجا جمع کرده است.</p>
+    </header>
+
+    <section class="info">
+        <h2>معرفی و وضعیت سرور</h2>
+        <p>این سرور با زبان **C++17** توسعه داده شده و از قابلیت‌های مدرن (مانند `std::thread`، `std::atomic` و `std::unique_ptr`) برای عملکرد بهینه استفاده می‌کند.</p>
+        <div class="status-box">
+            <span>وضعیت: <strong style="color:#28a745;">✅ در حال اجرا (LISTEN)</strong></span>
+            <span>پورت پیش‌فرض: <strong>8080</strong></span>
+            <span>مدل همروندی: **Per-Request Threading** (چندنخی)</span>
+        </div>
+    </section>
+
+    <hr>
+    
+    <section class="technical-details">
+        <h2>جزئیات فنی (Data Persistence)</h2>
+        <p>ما از یک دیتابیس توکار و سبک به نام **SQLite3** استفاده می‌کنیم. این دیتابیس تمام داده‌های API را به صورت **پایدار** در فایل `server_db.sqlite` ذخیره می‌کند. حتی با ری‌استارت شدن سرور، اطلاعات از بین نمی‌رود.</p>
+        <table>
+            <tr>
+                <th>دیتابیس</th>
+                <td>**SQLite3** (سبک، توکار، بدون نیاز به سرور جداگانه)</td>
+            </tr>
+            <tr>
+                <th>فایل دیتابیس</th>
+                <td>`server_db.sqlite`</td>
+            </tr>
+            <tr>
+                <th>جدول اصلی</th>
+                <td>`users` (شامل ستون‌های `id`, `name`, `email`)</td>
+            </tr>
+            <tr>
+                <th>امنیت در کد</th>
+                <td>استفاده از `db_connection_mutex` برای قفل کردن دسترسی به SQLite در محیط چندنخی</td>
+            </tr>
+        </table>
+    </section>
+
+    <hr>
+
+    <section class="api-test">
+        <h2>تست API (مدیریت کاربران - JSON CRUD)</h2>
+        <p>این بخش برای تست مسیرهای API که با دیتابیس تعامل دارند، طراحی شده است.</p>
+        <div class="api-urls">
+            <a href="/api/users" target="_blank" class="button-link get-btn">مشاهده کاربران (GET: /api/users)</a>
+            <button onclick="addUser()" class="button-link post-btn">افزودن کاربر تستی (POST)</button>
+        </div>
+        <p class="note">✅ هر بار که کاربر جدید اضافه می‌کنید، یک ردیف جدید در فایل `server_db.sqlite` ایجاد می‌شود.</p>
+    </section>
+    
+    <hr>
+
+    <section class="server-tools">
+        <h2>ابزارهای سرور و امکانات اصلی</h2>
+        <ul>
+            <li>
+                <a href="/files" target="_blank">مدیریت فایل‌ها (/files)</a>
+                <p>امکان **آپلود جریانی (Streaming Upload)** فایل‌های حجیم و سپس دانلود یا حذف آن‌ها. فایل‌ها در پوشه `uploads` ذخیره می‌شوند.</p>
+            </li>
+            <li>
+                <a href="/count" target="_blank">شمارنده بازدید (/count)</a>
+                <p>تست Multi-thread بودن سرور: از یک `std::atomic<int>` استفاده شده تا حتی با درخواست‌های همزمان، خطا یا رقابت بر سر داده‌ها (Race Condition) رخ ندهد.</p>
+            </li>
+        </ul>
+    </section>
+
+    <hr>
+
+    <section class="guide">
+        <h2>راهنمای استفاده از سرور</h2>
+        <ol>
+            <li>**کامپایل:** مطمئن شوید که کتابخانه‌های `g++` و `libsqlite3-dev` نصب شده‌اند. از دستور لینک‌دهی زیر استفاده کنید:
+                <pre><code>g++ -o server main.cpp -std=c++17 -pthread -lsqlite3</code></pre>
+            </li>
+            <li>**راه‌اندازی:** سرور را با `./server` اجرا کنید. در این حالت، فایل دیتابیس `server_db.sqlite` به طور خودکار ایجاد می‌شود.</li>
+            <li>**تست API:** روی دکمه **"افزودن کاربر تستی"** کلیک کنید. یک کاربر در دیتابیس ذخیره شده و سپس لیست کاربران (API GET) در یک تب جدید باز می‌شود.</li>
+            <li>**تست پایداری:** سرور را متوقف کرده و دوباره اجرا کنید. کاربران اضافه شده باید همچنان در `/api/users` قابل مشاهده باشند.</li>
+        </ol>
+    </section>
+
+    <div class="ai-credit">
+        <p>⭐ **تقدیر ویژه:** توسعه‌ی این ساختار پیشرفته و ماژولار با الهام از راهنمایی‌های دقیق و تخصصی **Gemini** (یک مدل قدرتمند از **Google**) تکمیل شده است. دانش هوش مصنوعی، ساخت وب سرورهای C++ با دیتابیس پایدار را برای همه ممکن ساخته است. <a href="https://gemini.google.com" target="_blank">کاوش با هوش مصنوعی</a></p>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 Cpp Server Project. <a href="/" style="color: #3498db;">بازگشت به بالا</a></p>
+    </footer>
+
+    <script>
+        function addUser() {
+            const xhr = new XMLHttpRequest();
+            // ساخت داده‌ی تستی با ایمیل یونیک (بر اساس زمان)
+            const uniqueEmail = "user_" + Date.now() + "@cpp.dev"; 
+            const postData = JSON.stringify({
+                "name": "Ardeshir A.I.", // نام قوی‌تر!
+                "email": uniqueEmail
+            });
+
+            xhr.open('POST', '/api/users', true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            
+            xhr.onload = function() {
+                let message = "";
+                let status = xhr.status;
+                
+                try {
+                    const responseJson = JSON.parse(xhr.responseText);
+                    message = responseJson.message || responseJson.error || "عملیات نامشخص";
+                } catch (e) {
+                    message = "پاسخ نامعتبر سرور.";
+                }
+
+                if (status === 201) {
+                    alert(`✅ کاربر جدید با موفقیت اضافه شد (ID: ${JSON.parse(xhr.responseText).id})\nEmail: ${uniqueEmail}`);
+                } else if (status === 400) {
+                    alert(`❌ خطای کاربر (400):\n${message}`);
+                } else if (status === 500) {
+                     alert(`⚠️ خطای سرور (500):\n${message}\n(ممکن است ایمیل تکراری باشد.)`);
+                } else {
+                    alert(`❌ خطا با کد ${status}:\n ${message}`);
+                }
+
+                // باز کردن لیست کاربران برای تایید
+                window.open('/api/users', '_blank');
+            };
+
+            xhr.onerror = function() {
+                alert("🔴 خطای شبکه: اتصال به سرور C++ برقرار نشد.");
+            };
+
+            xhr.send(postData);
+        }
+    </script>
+</body>
+</html>
