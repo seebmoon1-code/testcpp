@@ -1,0 +1,325 @@
+/* ----------------------------------------------------------------------
+   Style Sheet for Cpp-SQLite-Server (Modern & Clean Design)
+   ---------------------------------------------------------------------- */
+
+/* --- Base & Typography --- */
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700;900&display=swap');
+
+body {
+    direction: rtl; 
+    /* استفاده از فونت مدرن و استاندارد فارسی */
+    font-family: 'Vazirmatn', Tahoma, Arial, sans-serif;
+    background-color: #f4f7f9; /* پس زمینه روشن و آرام */
+    color: #333;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    font-size: 16px;
+}
+
+h1, h2, h3 {
+    color: #2c3e50;
+    margin-top: 0;
+    font-weight: 700;
+}
+
+p {
+    color: #555;
+    margin-bottom: 15px;
+}
+
+a {
+    text-decoration: none;
+    color: #3498db;
+    transition: color 0.3s;
+}
+
+a:hover {
+    color: #2980b9;
+    text-decoration: underline;
+}
+
+/* --- Layout & Containers --- */
+header {
+    background-color: #2c3e50; /* رنگ تیره و حرفه‌ای برای هدر */
+    color: white;
+    padding: 30px 0;
+    text-align: center;
+    border-bottom: 6px solid #e67e22; /* نوار نارنجی برای جلب توجه */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+header h1 {
+    color: white;
+    font-size: 2.2em;
+    font-weight: 900;
+    margin-bottom: 5px;
+}
+
+header p {
+    color: #bdc3c7;
+    font-size: 1.1em;
+}
+
+section {
+    max-width: 900px;
+    margin: 30px auto;
+    padding: 25px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    border-right: 4px solid #3498db; /* نوار آبی سمت راست */
+}
+
+hr {
+    border: 0;
+    border-top: 1px dashed #ccc;
+    margin: 30px auto;
+    width: 80%;
+}
+
+/* --- Status Box --- */
+.status-box {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #ecf0f1;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-around;
+    font-weight: 700;
+    font-size: 1.1em;
+    color: #2c3e50;
+    border: 1px solid #ddd;
+}
+
+/* --- Buttons & API Links --- */
+.api-urls {
+    margin: 20px 0;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.button-link {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 6px;
+    text-decoration: none;
+    cursor: pointer;
+    font-weight: 700;
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.button-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    text-decoration: none;
+}
+
+.get-btn {
+    background-color: #2ecc71; /* سبز جذاب */
+    color: white;
+}
+
+.get-btn:hover {
+    background-color: #27ad60;
+}
+
+.post-btn {
+    background-color: #3498db; /* آبی متمرکز */
+    color: white;
+}
+
+.post-btn:hover {
+    background-color: #2980b9;
+}
+
+.note {
+    text-align: center;
+    font-style: italic;
+    color: #999;
+    margin-top: 10px;
+}
+
+/* --- Server Tools List --- */
+.server-tools ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.server-tools li {
+    background: #fafafa;
+    padding: 18px;
+    margin-bottom: 12px;
+    border-left: 5px solid #9b59b6; /* بنفش برای ابزارها */
+    border-radius: 6px;
+    transition: background-color 0.3s;
+}
+
+.server-tools li:hover {
+    background-color: #f0f0f0;
+}
+
+.server-tools a {
+    font-weight: 700;
+    font-size: 1.1em;
+    color: #9b59b6;
+}
+
+.server-tools p {
+    margin-top: 5px;
+    font-size: 0.9em;
+    color: #666;
+}
+
+/* --- Technical Details Table (استایل‌های داخلی قبلی به اینجا منتقل شدند) --- */
+.technical-details table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-size: 0.95em;
+}
+.technical-details th, .technical-details td {
+    border: 1px solid #eee;
+    padding: 12px;
+    text-align: right;
+}
+.technical-details th {
+    background-color: #eaf2f8; /* آبی کمرنگ برای هدر جدول */
+    width: 35%;
+    font-weight: 700;
+    color: #2c3e50;
+}
+.technical-details td {
+    background-color: #ffffff;
+    font-weight: 400;
+}
+
+/* --- Guide & Code Snippets --- */
+.guide ol {
+    padding-right: 25px;
+    font-size: 0.95em;
+}
+
+.guide li {
+    margin-bottom: 15px;
+}
+
+pre {
+    background-color: #2c3e50;
+    color: #ecf0f1;
+    padding: 15px;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-size: 0.9em;
+    direction: ltr; /* کدها چپ به راست باشند */
+    text-align: left;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+code {
+    font-family: monospace;
+}
+
+/* --- AI Credit Box --- */
+.ai-credit {
+    max-width: 900px;
+    margin: 30px auto;
+    background-color: #e8f5e9;
+    border-right: 6px solid #28a745; /* سبز برای تقدیر */
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.ai-credit p {
+    margin: 0;
+    color: #28a745;
+    font-weight: 700;
+    font-size: 0.95em;
+}
+
+.ai-credit a {
+    color: #1e8449;
+    font-weight: 900;
+    text-decoration: underline;
+}
+
+/* --- Footer --- */
+footer {
+    text-align: center;
+    padding: 20px 0;
+    margin-top: 40px;
+    color: #999;
+    font-size: 0.85em;
+    background-color: #fff;
+    border-top: 1px solid #eee;
+}
+
+footer a {
+    color: #555;
+}
+
+/* --- File Manager Specific (For /files page - if implemented) --- */
+.list-files-section ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.list-files-section li {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px 15px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.list-files-section li button {
+    background-color: #e74c3c; /* قرمز برای حذف */
+    color: white;
+    padding: 8px 15px;
+    font-size: 0.9em;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.list-files-section li button:hover {
+    background-color: #c0392b;
+}
+
+/* برای موبایل */
+@media (max-width: 768px) {
+    section {
+        margin: 15px;
+        padding: 15px;
+    }
+    header h1 {
+        font-size: 1.8em;
+    }
+    .status-box {
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+    .api-urls {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .technical-details th, .technical-details td {
+        display: block;
+        width: 100%;
+        text-align: right;
+    }
+    .technical-details th {
+        background-color: #f0f0f0;
+        border-bottom: none;
+    }
+}
