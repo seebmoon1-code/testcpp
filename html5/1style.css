@@ -1,0 +1,154 @@
+/* تنظیمات پایه */
+body {
+    direction: rtl; /* برای پشتیبانی از فارسی */
+    font-family: Tahoma, Arial, sans-serif;
+    background-color: #f4f7f6;
+    color: #333;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+}
+
+header {
+    background-color: #2c3e50;
+    color: white;
+    padding: 20px 0;
+    text-align: center;
+    border-bottom: 5px solid #3498db;
+}
+
+h1, h2 {
+    color: #2c3e50;
+    text-align: center;
+    margin-top: 15px;
+}
+
+/* طرح‌بندی اصلی */
+section {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+hr {
+    border: 0;
+    border-top: 1px solid #ddd;
+    margin: 30px auto;
+    width: 80%;
+}
+
+/* دکمه‌ها و لینک‌ها */
+.button-link, .get-btn, .post-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    margin: 5px;
+    border: none;
+    border-radius: 5px;
+    text-decoration: none;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
+    text-align: center;
+}
+
+.get-btn {
+    background-color: #2ecc71; /* سبز */
+    color: white;
+}
+
+.post-btn {
+    background-color: #3498db; /* آبی */
+    color: white;
+}
+
+.get-btn:hover {
+    background-color: #27ae60;
+}
+
+.post-btn:hover {
+    background-color: #2980b9;
+}
+
+/* بخش‌های اطلاعاتی */
+.info {
+    text-align: center;
+}
+
+.status-box {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #ecf0f1;
+    border-radius: 5px;
+    display: inline-block;
+}
+
+.api-test {
+    text-align: center;
+}
+
+.api-urls {
+    margin-top: 15px;
+}
+
+/* لیست ابزارها */
+.server-tools ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.server-tools li {
+    background: #f9f9f9;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-left: 5px solid #9b59b6; /* بنفش */
+    border-radius: 4px;
+}
+
+.server-tools a {
+    font-weight: bold;
+    color: #9b59b6;
+    text-decoration: none;
+}
+
+.server-tools a:hover {
+    text-decoration: underline;
+}
+
+.server-tools p {
+    margin-top: 5px;
+    font-size: 0.9em;
+    color: #666;
+}
+
+/* قسمت مدیریت فایل (/files) */
+.list-files-section ul {
+    list-style-type: square;
+    padding-right: 20px;
+}
+
+.list-files-section li button {
+    background-color: #e74c3c; /* قرمز برای حذف */
+    color: white;
+    padding: 5px 10px;
+    margin-right: 10px;
+    font-size: 0.8em;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.list-files-section li button:hover {
+    background-color: #c0392b;
+}
+
+/* فوتر */
+footer {
+    text-align: center;
+    padding: 15px 0;
+    margin-top: 40px;
+    color: #999;
+    font-size: 0.8em;
+}
