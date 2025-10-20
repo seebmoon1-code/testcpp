@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cpp Server V2.0 - پایدار</title>
+    <link rel="stylesheet" href="/style.css"> 
+</head>
+<body>
+    <header>
+        <h1>وب سرور C++ پیشرفته (با SQLite و Multi-Thread)</h1>
+    </header>
+
+    <section class="info">
+        <p>این یک وب سرور چندنخی است که با C++ نوشته شده و از دیتابیس **SQLite3** برای ذخیره‌سازی داده‌ها و مدیریت فایل‌های پایدار استفاده می‌کند.</p>
+        <div class="status-box">
+            <span>وضعیت: ✅ در حال اجرا</span>
+            <span>پورت: 8080</span>
+        </div>
+    </section>
+
+    <hr>
+
+    <section class="api-test">
+        <h2>تست API (مدیریت کاربران - JSON)</h2>
+        <div class="api-urls">
+            <a href="/api/users" target="_blank" class="button-link get-btn">مشاهده کاربران (GET)</a>
+            <button onclick="addUser()" class="button-link post-btn">افزودن کاربر (POST)</button>
+        </div>
+        <p class="note">با کلیک روی 'افزودن کاربر'، یک کاربر تستی به دیتابیس SQLite اضافه می‌شود.</p>
+    </section>
+    
+    <hr>
+
+    <section class="server-tools">
+        <h2>ابزارهای سرور</h2>
+        <ul>
+            <li>
+                <a href="/files" target="_blank">مدیریت فایل‌ها (/files)</a>
+                <p>آپلود، دانلود و حذف فایل‌های ذخیره شده در پوشه `uploads`.</p>
+            </li>
+            <li>
+                <a href="/count" target="_blank">شمارنده بازدید (/count)</a>
+                <p>تست Multi-thread بودن سرور با یک شمارنده اتمیک.</p>
+            </li>
+        </ul>
+    </section>
+
+    <footer>
+        <p>ساخته شده با قدرت C++ و SQLite3.</p>
+    </footer>
+
+    <script>
+        function addUser() {
+            const xhr = new XMLHttpRequest();
+            // ارسال داده‌ی JSON تستی
+            const postData = JSON.stringify({
+                "name": "Test User",
+                // ایمیل تکراری باعث خطای UNIQUE CONSTRAINT در SQLite می‌شود
+                "email": "user_" + Date.now() + "@cpp.dev" 
+            });
+
+            xhr.open('POST', '/api/users', true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            
+            xhr.onload = function() {
+                if (xhr.status === 201) {
+                    alert("کاربر جدید با موفقیت اضافه شد:\n" + xhr.responseText);
+                } else {
+                    alert("خطا در افزودن کاربر: " + JSON.parse(xhr.responseText).error);
+                }
+                // رفرش برای دیدن نتیجه در /api/users
+                window.open('/api/users', '_blank');
+            };
+
+            xhr.onerror = function() {
+                alert("خطای شبکه!");
+            };
+
+            xhr.send(postData);
+        }
+    </script>
+</body>
+</html>
