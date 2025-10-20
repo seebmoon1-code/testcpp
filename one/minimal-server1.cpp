@@ -1,84 +1,95 @@
 #include <iostream>
-#include <cstring>
-#include <unistd.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
+#include <string>
+#include <filesystem>
+#include <stdexcept> // برای مدیریت خطاها
 
-using namespace std;
+// از std::filesystem برای سادگی در کد استفاده می‌کنیم
+namespace fs = std::filesystem;
 
-// پورت مورد نظر. پورت 8080 نیاز به دسترسی 'root' ندارد.
-const int PORT = 8080;
+/**
+ * تابعی برای ساخت تعدادی پوشه با نام‌های متوالی در یک مسیر مشخص.
+ * * @param base_name نام پایه برای پوشه‌ها (مثلاً "Project")
+ * @param count تعداد پوشه‌هایی که باید ساخته شوند (مثلاً 10)
+ * @param base_path مسیر اصلی که پوشه‌ها در آنجا ساخته می‌شوند (مثلاً "./Output")
+ * @return true در صورت موفقیت کامل، false در صورت بروز خطا.
+ */
+bool create_directories_start(const std::string& base_name, int count, const fs::path& base_path) {
+    if (count <= 0) {
+        std::cerr << "Error: Folder count must be a positive number." << std::endl;
+        return false;
+    }
 
-// محتوای HTML که می‌خواهید گوشی‌ها ببینند.
-const char* html_content =
-    "HTTP/1.1 200 OK\r\n"
-    "Content-Type: text/html\r\n"
-    "Content-Length: 130\r\n" // طول محتوای HTML (به دقت محاسبه شود!)
-    "Connection: close\r\n"
-    "\r\n" // خط خالی برای جداسازی هدرها از محتوا
-    "<!DOCTYPE html>"
-    "<html><body>"
-    "<h1>سلام از لینوکس مینت!</h1>"
-    "<p>این محتوای مینیمال وب سرور C++ من است. پر قو!</p>"
-    "</body></html>";
+    std::cout << "Attempting to create " << count << " folders starting with '" << base_name
+              << "' in path: " << base_path.string() << std::endl;
+
+    // 1. ابتدا مطمئن می‌شویم مسیر پایه وجود دارد
+    try {
+        if (!fs::exists(base_path)) {
+            // از create_directories استفاده می‌کنیم تا اگر پوشه های والد هم وجود نداشت، بسازد
+            if (fs::create_directories(base_path)) {
+                std::cout << "Base path created: " << base_path.string() << std::endl;
+            } else {
+                // اگر وجود نداشت و نتوانست بسازد (به دلیل مجوز یا مشکل دیگر)
+                std::cerr << "Error: Failed to create base path: " << base_path.string() << std::endl;
+                return false;
+            }
+        }
+    } catch (const fs::filesystem_error& e) {
+        std::cerr << "Filesystem Error checking/creating base path: " << e.what() << std::endl;
+        return false;
+    }
+
+    // 2. ساخت پوشه‌های متوالی
+    bool all_successful = true;
+    for (int i = 1; i <= count; ++i) {
+        // نام پوشه: ترکیب نام پایه و شماره (مثلاً Project_01, Project_02)
+        std::string folder_name = base_name + "_" + (i < 10 ? "0" : "") + std::to_string(i);
+        
+        // مسیر کامل پوشه
+        fs::path full_path = base_path / folder_name; // از عملگر / برای ترکیب مسیرها استفاده می‌کنیم
+
+        try {
+            if (fs::create_directory(full_path)) {
+                std::cout << "  - Created: " << full_path.string() << std::endl;
+            } else if (fs::exists(full_path)) {
+                // اگر پوشه از قبل وجود داشته باشد خطا محسوب نمی‌شود
+                std::cout << "  - Exists: " << full_path.string() << std::endl;
+            } else {
+                // اگر نتوانست بسازد و وجود هم نداشت (خطای واقعی)
+                std::cerr << "  - Failed to create: " << full_path.string() << std::endl;
+                all_successful = false;
+            }
+        } catch (const fs::filesystem_error& e) {
+            std::cerr << "  - Filesystem Error creating " << full_path.string() << ": " << e.what() << std::endl;
+            all_successful = false;
+        }
+    }
+
+    return all_successful;
+}
+
+// ----------------------------------------------------------------------------------------------------
 
 int main() {
-    int server_fd, new_socket;
-    struct sockaddr_in address;
-    int addrlen = sizeof(address);
-    char buffer[1024] = {0};
+    // --- مثال تست ---
 
-    // 1. ایجاد سوکت
-    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
-        perror("socket failed");
-        exit(EXIT_FAILURE);
-    }
-       
-    // تنظیم آدرس سرور (برای اتصال در شبکه محلی)
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY; // گوش دادن روی همه رابط‌ها (LAN)
-    address.sin_port = htons(PORT);
-       
-    // 2. اتصال سوکت به آدرس و پورت
-    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
-        perror("bind failed");
-        exit(EXIT_FAILURE);
-    }
-       
-    // 3. گوش دادن برای اتصال‌ها (با صف انتظار ۳)
-    if (listen(server_fd, 3) < 0) {
-        perror("listen");
-        exit(EXIT_FAILURE);
-    }
-
-    cout << "وب سرور C++ مینیمال من در حال اجرا است. پورت: " << PORT << endl;
-
-    // 8. حلقه اصلی سرور
-    while (true) {
-        cout << "\nمنتظر اتصال جدید..." << endl;
-
-        // 4. پذیرش اتصال جدید (بلوکه می‌کند تا یک کلاینت وصل شود)
-        if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen)) < 0) {
-            perror("accept");
-            continue; // ادامه به حلقه بعدی در صورت خطا
-        }
-           
-        // 5. دریافت درخواست HTTP
-        long valread = read(new_socket, buffer, 1024);
-        // نمایش بخش کوچکی از درخواست کلاینت
-        cout << "درخواست دریافتی:" << endl;
-        // مطمئن می‌شویم که رشته null-terminated است
-        buffer[valread] = '\0'; 
-        cout << buffer << endl;
-           
-        // 6. ارسال پاسخ HTTP
-        write(new_socket, html_content, strlen(html_content));
-        cout << "پاسخ HTML ارسال شد." << endl;
-           
-        // 7. بستن سوکت کلاینت (برای HTTP ساده)
-        close(new_socket);
-    }
+    // 1. آرگومان اول: نام پایه پوشه
+    std::string folder_base = "Data_Set"; 
     
-    // این قسمت هرگز اجرا نمی‌شود مگر اینکه برنامه متوقف شود.
+    // 2. آرگومان دوم: تعداد پوشه
+    int folder_count = 5; 
+    
+    // 3. آرگومان سوم: جای ساخت پوشه (مسیر نسبی یا مطلق)
+    // برای مثال: یک پوشه به نام 'output_dirs' در کنار فایل اجرایی می‌سازد.
+    fs::path destination_path = "C:\\Temp\\My_Test_Folders"; // می توانید از "./Output" هم استفاده کنید
+    
+    
+    // فراخوانی تابع با آرگومان‌های داده شده
+    if (create_directories_start(folder_base, folder_count, destination_path)) {
+        std::cout << "\nOperation completed successfully." << std::endl;
+    } else {
+        std::cerr << "\nOperation completed with some errors." << std::endl;
+    }
+
     return 0;
 }
